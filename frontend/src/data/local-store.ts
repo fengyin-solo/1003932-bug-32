@@ -54,6 +54,23 @@ export function resetRows(key: string): EntryRow[] {
   return rows
 }
 
+/** 整库快照：跨模块联动动作（整改推进回写验收）在失败时整体回退用。 */
+export function snapshotRows(): Record<string, EntryRow[]> {
+  return clone(allRows())
+}
+
+/** 按键恢复快照，只触碰本次动作改过的模块。 */
+export function restoreRows(snapshot: Record<string, EntryRow[]>, keys: string[]): void {
+  for (const key of keys) {
+    saveRows(key, clone(snapshot[key] ?? []))
+  }
+}
+
 export function storageKey(): string {
   return STORAGE_KEY
+}
+
+/** 测试专用：丢弃内存缓存，下次读取重新从 localStorage 播种。 */
+export function __resetCacheForTest(): void {
+  cache = null
 }
