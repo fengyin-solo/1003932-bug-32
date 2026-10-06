@@ -12,7 +12,9 @@ const Evacuation = () => import('@/views/evacuation/index.vue')
 const Patrol = () => import('@/views/patrol/index.vue')
 const Engineering = () => import('@/views/engineering/index.vue')
 const Acceptance = () => import('@/views/acceptance/index.vue')
+const AcceptanceDetail = () => import('@/views/acceptance/detail.vue')
 const Rectification = () => import('@/views/rectification/index.vue')
+const RectificationDetail = () => import('@/views/rectification/detail.vue')
 const Drill = () => import('@/views/drill/index.vue')
 const Device = () => import('@/views/device/index.vue')
 const Report = () => import('@/views/report/index.vue')
@@ -35,7 +37,9 @@ const router = createRouter({
     { path: '/patrol', name: 'patrol', component: Patrol },
     { path: '/engineering', name: 'engineering', component: Engineering },
     { path: '/acceptance', name: 'acceptance', component: Acceptance },
+    { path: '/acceptance/:id', name: 'acceptance-detail', component: AcceptanceDetail },
     { path: '/rectification', name: 'rectification', component: Rectification },
+    { path: '/rectification/:id', name: 'rectification-detail', component: RectificationDetail },
     { path: '/drill', name: 'drill', component: Drill },
     { path: '/device', name: 'device', component: Device },
     { path: '/report', name: 'report', component: Report },

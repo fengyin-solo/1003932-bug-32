@@ -35,3 +35,25 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .error-text { color: #b42318; }
 .status-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 10px; font-size: 12px; color: var(--muted); }
 .legend-item { background: #eef2f7; border-radius: 999px; padding: 2px 10px; }
+.detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; }
+.detail-item { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px dashed #e5eaf1; font-size: 13px; }
+.detail-item .detail-label { color: var(--muted); min-width: 84px; }
+.detail-item.full { grid-column: 1 / -1; }
+.section-title { font-size: 14px; margin: 16px 0 8px; }
+.timeline { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; }
+.timeline-row { display: flex; gap: 12px; font-size: 13px; padding: 6px 0; border-bottom: 1px dashed #e5eaf1; }
+.timeline-row:last-child { border-bottom: none; }
+.timeline-time { color: var(--muted); min-width: 150px; }
+.status-tag { display: inline-block; border-radius: 999px; padding: 1px 10px; font-size: 12px; background: #eef2f7; }
+.status-tag.final { background: #e7f6ec; color: #177245; }
+.status-tag.overdue { background: #fdecec; color: #b42318; }
+.link[disabled] { color: #9aa6b2; cursor: not-allowed; }
+.modal-mask { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); display: flex; align-items: center; justify-content: center; z-index: 20; }
+.modal-card { background: #fff; border-radius: 10px; width: 420px; max-width: calc(100vw - 32px); padding: 18px 20px; }
+.modal-title { margin: 0 0 12px; font-size: 15px; }
+.modal-body { display: flex; flex-direction: column; gap: 10px; }
+.modal-body label { font-size: 13px; }
+.modal-body label span { display: block; color: var(--muted); margin-bottom: 4px; }
+.modal-body input, .modal-body textarea { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font: inherit; }
+.modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.back-link { font-size: 13px; color: var(--brand); cursor: pointer; }

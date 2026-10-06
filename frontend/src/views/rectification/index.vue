@@ -3,7 +3,7 @@
     <header class="page-head">
       <div>
         <h2>整改跟踪管理</h2>
-        <p class="page-desc">维护整改任务，围绕任务编号、验收编号、整改内容、责任单位做登记、筛选与状态流转。</p>
+        <p class="page-desc">维护整改任务，围绕任务编号、验收编号、整改内容、责任单位做登记、筛选与状态流转。状态只能按 待整改 → 整改中 → 已整改 → 已复核 推进。</p>
       </div>
       <div class="page-actions">
         <button class="btn primary" type="button" @click="openCreate">登记整改任务</button>
@@ -43,18 +43,29 @@
       </thead>
       <tbody>
         <tr v-for="row in rows" :key="String(row.id)">
-          <td v-for="column in columns" :key="column">{{ row[column] ?? '—' }}</td>
-          <td>{{ row.status }}</td>
+          <td v-for="column in columns" :key="column">
+            <RouterLink v-if="column === '任务编号'" class="link" :to="`/rectification/${row.id}`">
+              {{ row[column] ?? '—' }}
+            </RouterLink>
+            <template v-else>{{ row[column] === '' || row[column] == null ? '—' : row[column] }}</template>
+          </td>
+          <td>
+            <span class="status-tag" :class="statusClass(row.status)">{{ row.status }}</span>
+          </td>
           <td class="row-actions">
-            <button
-              v-for="action in actions"
-              :key="action"
-              class="link"
-              type="button"
-              @click="runAction(action, row)"
-            >
-              {{ action }}
-            </button>
+            <template v-if="allowedActions(row).length">
+              <button
+                v-for="action in allowedActions(row)"
+                :key="action"
+                class="link"
+                type="button"
+                :disabled="busyKey === `${row.id}:${action}`"
+                @click="runAction(action, row)"
+              >
+                {{ action === '确认复核' ? `${action}…` : action }}
+              </button>
+            </template>
+            <span v-else class="page-desc">无可用动作</span>
           </td>
         </tr>
         <tr v-if="!rows.length">
@@ -72,24 +83,27 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import {
+  availableActions,
   downloadEntries,
+  isActionInFlight,
   listEntries,
   moduleMeta,
-  runAction as applyAction,
+  submitAction,
 } from '@/api/local-service'
 import type { EntryRow } from '@/data/types'
 
 const meta = moduleMeta('rectification')
+const router = useRouter()
 const columns = ["任务编号", "验收编号", "整改内容", "责任单位", "整改期限", "整改措施", "复核人", "整改状态"]
-const actions = ["开始整改", "提交复核", "确认复核"]
 const statuses = ["待整改", "整改中", "已整改", "已复核", "逾期未改"]
-const stats = [{"label": "待整改数", "value": 0}, {"label": "整改中数", "value": 0}, {"label": "逾期未改数", "value": 0}]
 
 const rows = ref<EntryRow[]>([])
 const total = ref(0)
 const errorMessage = ref('')
+const busyKey = ref('')
 const filters = ref<Record<string, string>>({})
 const filterFields = columns.slice(0, 3)
 const statusSummary = computed(() =>
@@ -98,6 +112,22 @@ const statusSummary = computed(() =>
     count: rows.value.filter((row) => String(row.status) === status).length,
   })),
 )
+const stats = computed(() => [
+  { label: '待整改数', value: rows.value.filter((row) => String(row.status) === '待整改').length },
+  { label: '整改中数', value: rows.value.filter((row) => ['整改中', '已整改'].includes(String(row.status))).length },
+  { label: '逾期未改数', value: rows.value.filter((row) => String(row.status) === '逾期未改').length },
+])
+
+function statusClass(status: string | number | boolean): string {
+  const text = String(status)
+  if (text === '逾期未改') return 'overdue'
+  if (['已复核'].includes(text)) return 'final'
+  return ''
+}
+
+function allowedActions(row: EntryRow): string[] {
+  return availableActions(meta, row)
+}
 
 function resetFilters() {
   filters.value = {}
@@ -112,14 +142,27 @@ function openCreate() {
   errorMessage.value = '整改任务登记入口尚未接入审批流'
 }
 
-function runAction(action: string, row: EntryRow) {
+async function runAction(action: string, row: EntryRow) {
   errorMessage.value = ''
-  const result = applyAction(meta.key, Number(row.id), action)
-  if (!result.ok) {
-    errorMessage.value = result.message
+  // 确认复核必须填写复核人，统一到详情页弹窗完成；其余动作列表内直接提交。
+  if (action === '确认复核') {
+    router.push(`/rectification/${row.id}`)
     return
   }
-  reload()
+  if (isActionInFlight(meta.key, Number(row.id))) {
+    errorMessage.value = '该任务正在处理中，请勿重复提交'
+    return
+  }
+  busyKey.value = `${row.id}:${action}`
+  try {
+    const result = await submitAction(meta.key, Number(row.id), action)
+    if (!result.ok) {
+      errorMessage.value = result.message
+    }
+  } finally {
+    busyKey.value = ''
+    reload()
+  }
 }
 
 function reload() {
